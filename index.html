@@ -17,7 +17,7 @@
         .app-container { 
             background: white; 
             width: 100%; 
-            max-width: 400px; /* 모바일 화면 크기에 맞춤 */
+            max-width: 400px; 
             padding: 25px 20px; 
             border-radius: 16px; 
             box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
@@ -99,12 +99,11 @@
 </div>
 
 <script>
-<script>
     // 카카오 REST API 키
     const KAKAO_API_KEY = '2cb00c7fd546d28abc34eb785c09c20b';
 
     // ==========================================
-    // 1. 화면 UI 조작 함수 (경유지 추가/삭제) - 기존과 동일
+    // 1. 화면 UI 조작 함수 (경유지 추가/삭제) 
     // ==========================================
     function addWaypoint() {
         const container = document.getElementById('waypoint-container');
@@ -122,7 +121,7 @@
     }
 
     // ==========================================
-    // 2. 카카오 로컬 API를 활용한 데이터 처리 함수 (업그레이드 완료!)
+    // 2. 카카오 로컬 API를 활용한 데이터 처리 함수
     // ==========================================
     async function getCoordinates(query) {
         if (!query) return null;
@@ -139,17 +138,18 @@
             // 검색 결과가 존재한다면 가장 정확도 높은 첫 번째 결과 반환
             if (data.documents && data.documents.length > 0) {
                 return {
-                    name: data.documents[0].place_name, // 카카오가 찾아준 정확한 상호명
-                    lat: parseFloat(data.documents[0].y), // 위도
-                    lng: parseFloat(data.documents[0].x)  // 경도
+                    name: data.documents[0].place_name, 
+                    lat: parseFloat(data.documents[0].y), 
+                    lng: parseFloat(data.documents[0].x)  
                 };
             }
-            return null; // 검색 결과 없음
+            return null; 
         } catch (error) {
             console.error("카카오 API 에러:", error);
             return null;
         }
     }
+
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -230,7 +230,7 @@
         btnSubmit.disabled = false;
     }
 
-// 5. 정렬된 결과를 화면에 예쁘게 보여주고, 내비게이션 버튼을 추가하는 함수
+    // 5. 정렬된 결과를 화면에 예쁘게 보여주고, 내비게이션 버튼을 추가하는 함수
     function displayResult(path) {
         const oldResult = document.getElementById('result-board');
         if(oldResult) oldResult.remove();
