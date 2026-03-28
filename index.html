@@ -46,7 +46,6 @@
 </div>
 
 <script>
-    // ✅ 발급받으신 카카오 REST API 키를 아래 따옴표 안에 넣어주세요!
     const KAKAO_API_KEY = '2cb00c7fd546d28abc34eb785c09c20b';
 
     let currentOptimalPath = [];
@@ -61,10 +60,17 @@
     }
     function removeWaypoint(button) { button.parentElement.remove(); }
 
-    // --- 2. 카카오 로컬 API 데이터 처리 ---
-    async function getCoordinates(query) {
+    // --- 2. 카카오 로컬 API 데이터 처리 (출발지 좌표 기준 검색 적용) ---
+    async function getCoordinates(query, refLat = null, refLng = null) {
         if (!query) return null;
-        const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
+        
+        let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
+        
+        // ✨ 핵심: 기준 좌표가 넘어오면 그 좌표 주변을 우선 검색하도록 카카오에 요청
+        if (refLat !== null && refLng !== null) {
+            url += `&y=${refLat}&x=${refLng}`;
+        }
+
         try {
             const response = await fetch(url, { headers: { 'Authorization': `KakaoAK ${KAKAO_API_KEY}` } });
             const data = await response.json();
@@ -118,7 +124,6 @@
         let candidates = [];
         let seenIds = new Set(); 
 
-        // 경로 상의 각 지점 반경 2km 이내의 사용자가 입력한 검색어 수집 (카테고리 제한 해제)
         for (let node of currentOptimalPath) {
             const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(searchKeyword)}&x=${node.lng}&y=${node.lat}&radius=2000`;
             try {
@@ -141,12 +146,11 @@
 
         if (candidates.length === 0) {
             alert(`경로 주변 2km 내에 '${searchKeyword}'을(를) 찾을 수 없습니다.`);
-            btn.innerText = "경로 상 최적의 위치 추가";
+            btn.innerText = "최적의 위치 추가";
             btn.disabled = false;
             return;
         }
 
-        // 최적의 삽입 위치 계산
         let bestPlace = null;
         let bestInsertIndex = -1;
         let minDetour = Infinity; 
@@ -182,23 +186,34 @@
         }
     }
 
-    // --- 4. 메인 실행 및 화면 출력 ---
+    // --- 4. 메인 실행 및 화면 출력 (순서 분리 로직 적용) ---
     async function calculateRoute() {
         const startInput = document.getElementById('start-point').value;
         const waypointInputs = document.querySelectorAll('.waypoint-input'); 
-        let queries = [startInput];
-        waypointInputs.forEach(input => { if(input.value.trim() !== "") queries.push(input.value); });
+        let waypointQueries = [];
+        waypointInputs.forEach(input => { if(input.value.trim() !== "") waypointQueries.push(input.value); });
 
-        if(queries.length < 2) { alert("출발지와 최소 1개 이상의 목적지를 입력해주세요."); return; }
+        if(waypointQueries.length === 0) { alert("최소 1개 이상의 목적지를 입력해주세요."); return; }
 
         const btnSubmit = document.querySelector('.btn-submit');
         btnSubmit.innerText = "경로 계산 중..."; btnSubmit.disabled = true;
         
         let locations = [];
-        for (let i = 0; i < queries.length; i++) {
-            const coords = await getCoordinates(queries[i]);
+        
+        // ✨ 1단계: 출발지 먼저 정확하게 찾기
+        const startCoords = await getCoordinates(startInput);
+        if (startCoords) {
+            locations.push(startCoords);
+        } else {
+            alert(`출발지 '${startInput}'의 위치를 찾을 수 없습니다.`);
+            btnSubmit.innerText = "최적 경로 계산하기"; btnSubmit.disabled = false; return;
+        }
+
+        // ✨ 2단계: 찾아낸 출발지 좌표(startCoords)를 기준으로 경유지 찾기
+        for (let i = 0; i < waypointQueries.length; i++) {
+            const coords = await getCoordinates(waypointQueries[i], startCoords.lat, startCoords.lng);
             if (coords) locations.push(coords);
-            else { alert(`'${queries[i]}'의 위치를 찾을 수 없습니다.`); btnSubmit.innerText = "최적 경로 계산하기"; btnSubmit.disabled = false; return; }
+            else { alert(`'${waypointQueries[i]}'의 위치를 찾을 수 없습니다.`); btnSubmit.innerText = "최적 경로 계산하기"; btnSubmit.disabled = false; return; }
         }
 
         currentOptimalPath = sortLocations(locations);
@@ -239,7 +254,6 @@
         });
         htmlContent += `</ol>`;
 
-        // === 확장된 프랜차이즈 자유 검색 기능 ===
         htmlContent += `
             <div class="franchise-box">
                 <label style="font-size:13px; color:#6A36CE; margin-bottom:8px;">가는 길에 들를 곳이 있나요?</label>
