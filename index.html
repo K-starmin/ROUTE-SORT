@@ -29,7 +29,7 @@
 <body>
 
 <div class="app-container">
-    <h2>🚀 최적 경로 마스터</h2>
+    <h2>최적 경로 마스터</h2>
     <div class="input-group">
         <label>출발지</label>
         <input type="text" id="start-point" placeholder="현재 위치 또는 주소 입력">
@@ -141,7 +141,7 @@
 
         if (candidates.length === 0) {
             alert(`경로 주변 2km 내에 '${searchKeyword}'을(를) 찾을 수 없습니다.`);
-            btn.innerText = "✨ 경로 상 최적의 위치 추가";
+            btn.innerText = "경로 상 최적의 위치 추가";
             btn.disabled = false;
             return;
         }
@@ -176,7 +176,7 @@
         }
 
         if (bestPlace) {
-            bestPlace.name = `🟣 ${bestPlace.name} (최적 동선 추천)`;
+            bestPlace.name = `${bestPlace.name} (최적 동선 추천)`;
             currentOptimalPath.splice(bestInsertIndex, 0, bestPlace);
             displayResult(currentOptimalPath); 
         }
@@ -242,10 +242,10 @@
         // === 확장된 프랜차이즈 자유 검색 기능 ===
         htmlContent += `
             <div class="franchise-box">
-                <label style="font-size:13px; color:#6A36CE; margin-bottom:8px;">💡 가는 길에 들를 곳이 있나요?</label>
+                <label style="font-size:13px; color:#6A36CE; margin-bottom:8px;">가는 길에 들를 곳이 있나요?</label>
                 <input type="text" id="franchise-input" placeholder="예: 스타벅스, 다이소, 주유소, 화장실">
                 <button id="btn-add-franchise" class="btn-franchise" onclick="findOptimalFranchise()">
-                    ✨ 경로 상 최적의 위치 추가
+                    최적의 위치 추가
                 </button>
             </div>
         `;
