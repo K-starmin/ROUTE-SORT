@@ -99,8 +99,12 @@
 </div>
 
 <script>
+<script>
+    // 카카오 REST API 키
+    const KAKAO_API_KEY = '2cb00c7fd546d28abc34eb785c09c20b';
+
     // ==========================================
-    // 1. 화면 UI 조작 함수 (경유지 추가/삭제)
+    // 1. 화면 UI 조작 함수 (경유지 추가/삭제) - 기존과 동일
     // ==========================================
     function addWaypoint() {
         const container = document.getElementById('waypoint-container');
@@ -118,28 +122,34 @@
     }
 
     // ==========================================
-    // 2. 알고리즘 및 데이터 처리 함수
+    // 2. 카카오 로컬 API를 활용한 데이터 처리 함수 (업그레이드 완료!)
     // ==========================================
     async function getCoordinates(query) {
         if (!query) return null;
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + " South Korea")}`;
+        
+        // 카카오 키워드 검색 API 주소
+        const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
+        
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: { 'Authorization': `KakaoAK ${KAKAO_API_KEY}` } // 카카오 출입증 제시
+            });
             const data = await response.json();
-            if (data && data.length > 0) {
+            
+            // 검색 결과가 존재한다면 가장 정확도 높은 첫 번째 결과 반환
+            if (data.documents && data.documents.length > 0) {
                 return {
-                    name: query,
-                    lat: parseFloat(data[0].lat),
-                    lng: parseFloat(data[0].lon) 
+                    name: data.documents[0].place_name, // 카카오가 찾아준 정확한 상호명
+                    lat: parseFloat(data.documents[0].y), // 위도
+                    lng: parseFloat(data.documents[0].x)  // 경도
                 };
             }
-            return null;
+            return null; // 검색 결과 없음
         } catch (error) {
-            console.error("API 에러:", error);
+            console.error("카카오 API 에러:", error);
             return null;
         }
     }
-
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
